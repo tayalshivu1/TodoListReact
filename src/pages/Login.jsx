@@ -75,7 +75,7 @@ export const Login = () => {
         onSubmit={submitHandler}
         className="flex flex-col items-center gap-5 mt-10"
       >
-        <h2>Login</h2>
+        <h2 className="text-black-900">Login</h2>
         <div className="flex flex-col items-start">
           <input
             className="p-1 rounded border-1"
