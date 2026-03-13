@@ -1,5 +1,5 @@
-import { PencilIcon, TrashIcon, CheckIcon } from '@heroicons/react/24/outline';
-import { useState } from 'react';
+import { PencilIcon, TrashIcon, CheckIcon } from "@heroicons/react/24/outline";
+import { useState } from "react";
 
 export const Item = ({
   item,

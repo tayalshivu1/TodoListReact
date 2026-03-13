@@ -1,14 +1,27 @@
-import { ItemsList } from '../components/ItemsList';
-import { Navbar } from '../components/Navbar';
-import { useState } from 'react';
+import { ItemsList } from "../components/ItemsList";
+import { Navbar } from "../components/Navbar";
+import { useState, useEffect } from "react";
+
+const API_URL = "https://todolistapi-1oi8.onrender.com/api/notes";
 
 export const Dashboard = () => {
-  const [items, setItems] = useState([
-    { id: 1, text: 'First item', isEditing: false },
-    { id: 2, text: 'second item', isEditing: false },
-  ]);
-  const [newItem, setNewItem] = useState({ text: '', isEditing: false });
+  const [items, setItems] = useState([]);
+  const [newItem, setNewItem] = useState({ text: "", isEditing: false });
   const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    const fetchNotes = async () => {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      const d = data.map((da) => ({
+        id: da._id,
+        text: da.title,
+        isEditing: false,
+      }));
+      setItems(d);
+    };
+    fetchNotes();
+  }, []);
 
   const newItemHandler = (e) => {
     const value = e.target.value;
@@ -21,25 +34,49 @@ export const Dashboard = () => {
     setNewItem((prev) => ({ ...prev, text: value, id }));
   };
 
+  const addItemToDB = async (data) => {
+    await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+  };
+
+  const removeFromDB = async (id) => {
+    await fetch(`${API_URL}/${id}`, {
+      method: "DELETE",
+    });
+  };
+
+  const editToDB = async (id, item) => {
+    await fetch(`${API_URL}/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(item),
+    });
+  };
+
   const addToListHandler = () => {
     const newItems = [...items, newItem];
-    setNewItem({ text: '' });
+    addItemToDB({ title: newItem.text, content: newItem.text });
+    setNewItem({ text: "" });
     setItems(newItems);
   };
 
   const deleteItemHandler = (item) => {
     const newItems = items.filter((it) => it.id !== item.id);
+    removeFromDB(item.id);
     setItems(newItems);
   };
 
   const setIsEditing = (item) => {
     const newList = items.map((it) =>
-      it.id === item.id ? { ...it, isEditing: true } : it
+      it.id === item.id ? { ...it, isEditing: true } : it,
     );
     setItems(newList);
   };
 
-  const editItemHandler = (item, newText) => {
+  const editItemHandler = async (item, newText) => {
     const newItem = { id: item.id, isEditing: false, text: newText };
     const updatedList = items.map((eachItem) => {
       if (eachItem.id === item.id) {
@@ -47,6 +84,7 @@ export const Dashboard = () => {
       }
       return eachItem;
     });
+    await editToDB(item.id, { title: newText, content: newText });
     setItems(updatedList);
   };
 
@@ -78,8 +116,8 @@ export const Dashboard = () => {
         <button
           className={`${
             isDisabled
-              ? 'bg-indigo-200'
-              : 'bg-indigo-500 hover:cursor-pointer hover:bg-indigo-400'
+              ? "bg-indigo-200"
+              : "bg-indigo-500 hover:cursor-pointer hover:bg-indigo-400"
           } p-2 w-15 h-10 rounded text-white`}
           onClick={addToListHandler}
           disabled={isDisabled}
