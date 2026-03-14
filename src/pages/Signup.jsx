@@ -2,7 +2,7 @@ import { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
-const AUTH_API_URL = "http://localhost:3000/api/auth";
+const AUTH_API_URL = "https://todolistapi-1oi8.onrender.com/api/auth";
 
 export const Signup = () => {
   const navigate = useNavigate();
@@ -109,6 +109,7 @@ export const Signup = () => {
     e.preventDefault();
     const error = await registerUser(data);
     if (!error) {
+      authContext.setUserData({ email: data.email.val, name: data.name.val });
       navigate("/");
     }
   };

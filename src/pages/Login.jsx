@@ -2,7 +2,7 @@ import { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
-const AUTH_API_URL = "http://localhost:3000/api/auth";
+const AUTH_API_URL = "https://todolistapi-1oi8.onrender.com/api/auth";
 
 export const Login = () => {
   const navigate = useNavigate();
@@ -82,12 +82,10 @@ export const Login = () => {
   const submitHandler = async (event) => {
     event.preventDefault();
     const message = await loginUser(data);
-    console.log(message);
     if (!message.error) {
       authContext.login(message.token);
       navigate("/dashboard");
     }
-    console.log(data);
   };
 
   return (

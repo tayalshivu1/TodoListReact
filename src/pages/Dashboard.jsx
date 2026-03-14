@@ -5,12 +5,14 @@ import { ClipLoader } from "react-spinners";
 import { AuthContext } from "../context/AuthContext";
 
 const API_URL = "https://todolistapi-1oi8.onrender.com/api/notes";
+const AUTH_API_URL = "https://todolistapi-1oi8.onrender.com/api/auth";
 
 export const Dashboard = () => {
   const [items, setItems] = useState([]);
   const [newItem, setNewItem] = useState({ text: "", isEditing: false });
   const [hasError, setHasError] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [userData, setUserData] = useState({ name: "", email: "" });
   const authContext = useContext(AuthContext);
 
   const token = authContext.getAuthToken();
@@ -19,11 +21,10 @@ export const Dashboard = () => {
       const res = await fetch(API_URL, {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       });
       const data = await res.json();
-      console.log(data);
       const d = data.map((da) => ({
         id: da._id,
         text: da.title,
@@ -32,7 +33,16 @@ export const Dashboard = () => {
       setItems(d);
       setLoading(false);
     };
+
+    const fetchUserData = async () => {
+      const response = await fetch(`${AUTH_API_URL}/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      setUserData({ name: data.name, email: data.email });
+    };
     fetchNotes();
+    fetchUserData();
   }, []);
 
   const newItemHandler = (e) => {
@@ -112,8 +122,11 @@ export const Dashboard = () => {
   return (
     <div>
       <Navbar />
+      <div className="text-xl mt-4">Hi {userData.name}!</div>
       <div className="flex flex-col mt-3">
-        <p className="text-xl font-bold text-black">Todo List</p>
+        <p className="text-xl font-bold text-black">
+          You can manage your todos here
+        </p>
         {loading && (
           <div className="flex flex-col gap-3">
             <ClipLoader className="m-auto mt-10 w-50 h-50" />
