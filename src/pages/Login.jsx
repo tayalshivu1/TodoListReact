@@ -1,19 +1,36 @@
-import { useState, useContext, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+import { useState, useContext, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
+
+const AUTH_API_URL = "http://localhost:3000/api/auth";
 
 export const Login = () => {
   const navigate = useNavigate();
   const authContext = useContext(AuthContext);
 
   const [data, setData] = useState({
-    email: { val: '', err: '' },
-    pass: { val: '', err: '' },
+    email: { val: "", err: "" },
+    pass: { val: "", err: "" },
   });
+  const [error, setError] = useState("");
+
+  const loginUser = async (data) => {
+    const { email, pass } = data;
+
+    const response = await fetch(`${AUTH_API_URL}/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.val, password: pass.val }),
+    });
+    const message = await response.json();
+
+    setError(message.error);
+    return message ?? "";
+  };
 
   useEffect(() => {
     if (authContext.isLoggedIn) {
-      navigate('/dashboard');
+      navigate("/dashboard");
     }
   }, []);
 
@@ -22,20 +39,20 @@ export const Login = () => {
     const value = event.target.value;
 
     switch (type) {
-      case 'email':
+      case "email":
         if (!value.length) {
-          setFormData(type, data.email.val, 'Please enter email');
-        } else if (!value.includes('@') || !value.includes('.co')) {
-          setFormData(type, data.email.val, 'Invalid email');
+          setFormData(type, data.email.val, "Please enter email");
+        } else if (!value.includes("@") || !value.includes(".co")) {
+          setFormData(type, data.email.val, "Invalid email");
         } else {
-          setFormData(type, data.email.val, '');
+          setFormData(type, data.email.val, "");
         }
         break;
-      case 'pass':
+      case "pass":
         if (!value.length) {
-          setFormData(type, data.pass.val, 'Please enter password');
+          setFormData(type, data.pass.val, "Please enter password");
         } else {
-          setFormData(type, data.pass.val, '');
+          setFormData(type, data.pass.val, "");
         }
         break;
     }
@@ -62,10 +79,14 @@ export const Login = () => {
   const isSubmitEnabled =
     data.email.err || data.pass.err || !data.email.val || !data.pass.val;
 
-  const submitHandler = (event) => {
+  const submitHandler = async (event) => {
     event.preventDefault();
-    authContext.login();
-    navigate('/dashboard');
+    const message = await loginUser(data);
+    console.log(message);
+    if (!message.error) {
+      authContext.login(message.token);
+      navigate("/dashboard");
+    }
     console.log(data);
   };
 
@@ -102,15 +123,16 @@ export const Login = () => {
           type="submit"
           className={`rounded-md p-1 w-25 text-white ${
             isSubmitEnabled
-              ? 'bg-indigo-300'
-              : 'bg-indigo-500 hover:cursor-pointer hover:bg-indigo-400'
+              ? "bg-indigo-300"
+              : "bg-indigo-500 hover:cursor-pointer hover:bg-indigo-400"
           }`}
           disabled={isSubmitEnabled}
         />
       </form>
+      {error && <p className="text-red-800">{error}</p>}
       <button
         onClick={() => {
-          navigate('/signup');
+          navigate("/signup");
         }}
         className="mt-5 text-black hover:cursor-pointer"
       >

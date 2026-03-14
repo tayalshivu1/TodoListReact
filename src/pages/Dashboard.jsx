@@ -1,6 +1,8 @@
 import { ItemsList } from "../components/ItemsList";
 import { Navbar } from "../components/Navbar";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
+import { ClipLoader } from "react-spinners";
+import { AuthContext } from "../context/AuthContext";
 
 const API_URL = "https://todolistapi-1oi8.onrender.com/api/notes";
 
@@ -8,17 +10,27 @@ export const Dashboard = () => {
   const [items, setItems] = useState([]);
   const [newItem, setNewItem] = useState({ text: "", isEditing: false });
   const [hasError, setHasError] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const authContext = useContext(AuthContext);
 
+  const token = authContext.getAuthToken();
   useEffect(() => {
     const fetchNotes = async () => {
-      const res = await fetch(API_URL);
+      const res = await fetch(API_URL, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
       const data = await res.json();
+      console.log(data);
       const d = data.map((da) => ({
         id: da._id,
         text: da.title,
         isEditing: false,
       }));
       setItems(d);
+      setLoading(false);
     };
     fetchNotes();
   }, []);
@@ -37,7 +49,10 @@ export const Dashboard = () => {
   const addItemToDB = async (data) => {
     await fetch(API_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify(data),
     });
   };
@@ -45,13 +60,17 @@ export const Dashboard = () => {
   const removeFromDB = async (id) => {
     await fetch(`${API_URL}/${id}`, {
       method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
     });
   };
 
   const editToDB = async (id, item) => {
     await fetch(`${API_URL}/${id}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify(item),
     });
   };
@@ -95,12 +114,20 @@ export const Dashboard = () => {
       <Navbar />
       <div className="flex flex-col mt-3">
         <p className="text-xl font-bold text-black">Todo List</p>
-        <ItemsList
-          items={items}
-          deleteItemHandler={deleteItemHandler}
-          editItemHandler={editItemHandler}
-          setIsEditing={setIsEditing}
-        />
+        {loading && (
+          <div className="flex flex-col gap-3">
+            <ClipLoader className="m-auto mt-10 w-50 h-50" />
+            <span>Loading...</span>
+          </div>
+        )}
+        {!loading && (
+          <ItemsList
+            items={items}
+            deleteItemHandler={deleteItemHandler}
+            editItemHandler={editItemHandler}
+            setIsEditing={setIsEditing}
+          />
+        )}
       </div>
 
       <div className="mt-5 flex flex-row gap-3 justify-center m-2">

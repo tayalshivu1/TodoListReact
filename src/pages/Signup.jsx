@@ -1,68 +1,86 @@
-import { useState, useContext, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+import { useState, useContext, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
+
+const AUTH_API_URL = "http://localhost:3000/api/auth";
 
 export const Signup = () => {
   const navigate = useNavigate();
   const authContext = useContext(AuthContext);
   const [data, setData] = useState({
-    name: { val: '', err: '' },
-    email: { val: '', err: '' },
-    pass: { val: '', err: '' },
-    confirmPass: { val: '', err: '' },
+    name: { val: "", err: "" },
+    email: { val: "", err: "" },
+    pass: { val: "", err: "" },
+    confirmPass: { val: "", err: "" },
   });
+  const [userError, setUserError] = useState("");
 
   useEffect(() => {
     if (authContext.isLoggedIn) {
-      navigate('/dashboard');
+      navigate("/dashboard");
     }
   }, []);
+
+  const registerUser = async (userData) => {
+    const { name, email, pass } = userData;
+    const newUser = { name: name.val, email: email.val, password: pass.val };
+    const response = await fetch(`${AUTH_API_URL}/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newUser),
+    });
+    const data = await response.json();
+
+    console.log(data);
+    setUserError(data.error ?? "");
+    return data.error ?? "";
+  };
 
   const changeHandler = (e) => {
     const type = e.target.name;
     const val = e.target.value;
 
     switch (type) {
-      case 'name':
+      case "name":
         if (val.length <= 0) {
-          setError(type, 'Please enter name');
+          setError(type, "Please enter name");
         } else {
-          setError(type, '');
+          setError(type, "");
         }
         break;
 
-      case 'email':
-        if (val.includes('@') && val.includes('.co')) {
-          setError(type, '');
+      case "email":
+        if (val.includes("@") && val.includes(".co")) {
+          setError(type, "");
         } else if (!val.length) {
-          setError(type, 'Please enter email');
+          setError(type, "Please enter email");
         } else {
-          setError(type, 'Invalid email');
+          setError(type, "Invalid email");
         }
         break;
 
-      case 'pass':
+      case "pass":
         if (!val.length) {
-          setError(type, 'Please enter password');
+          setError(type, "Please enter password");
         } else if (
           val !== data.confirmPass.val &&
           data.confirmPass.val.length
         ) {
-          setError('confirmPass', 'Password not matching');
-          setError(type, '');
+          setError("confirmPass", "Password not matching");
+          setError(type, "");
         } else {
-          setError(type, '');
-          setError('confirmPass', '');
+          setError(type, "");
+          setError("confirmPass", "");
         }
         break;
 
-      case 'confirmPass':
+      case "confirmPass":
         if (!val.length) {
-          setError(type, 'Please enter password');
+          setError(type, "Please enter password");
         } else if (val !== data.pass.val) {
-          setError(type, 'Password not matching');
+          setError(type, "Password not matching");
         } else {
-          setError(type, '');
+          setError(type, "");
         }
         break;
     }
@@ -87,11 +105,12 @@ export const Signup = () => {
     data.pass.err ||
     data.confirmPass.err;
 
-  const submitHandler = (e) => {
+  const submitHandler = async (e) => {
     e.preventDefault();
-    console.log(data);
-    authContext.login();
-    navigate('/dashboard');
+    const error = await registerUser(data);
+    if (!error) {
+      navigate("/");
+    }
   };
 
   return (
@@ -126,7 +145,7 @@ export const Signup = () => {
         <div className="flex flex-col items-start gap-2">
           <input
             className="p-1 rounded border-1"
-            type="text"
+            type="password"
             placeholder="Password..."
             value={data.pass.val}
             onChange={changeHandler}
@@ -137,7 +156,7 @@ export const Signup = () => {
         <div className="flex flex-col items-start gap-2">
           <input
             className="p-1 rounded border-1"
-            type="text"
+            type="password"
             placeholder="Re-type Password..."
             value={data.confirmPass.val}
             onChange={changeHandler}
@@ -150,17 +169,18 @@ export const Signup = () => {
         <input
           className={`rounded-md p-1 w-25 text-white ${
             isDisabled
-              ? 'bg-indigo-300'
-              : 'bg-indigo-500 hover:cursor-pointer hover:bg-indigo-400'
+              ? "bg-indigo-300"
+              : "bg-indigo-500 hover:cursor-pointer hover:bg-indigo-400"
           }`}
           type="submit"
           name="Submit"
           disabled={isDisabled}
         />
       </form>
+      {userError && <p className="m-4 text-red-700">{userError}</p>}
       <button
         onClick={() => {
-          navigate('/');
+          navigate("/");
         }}
         className="text-black hover:cursor-pointer mt-5"
       >
