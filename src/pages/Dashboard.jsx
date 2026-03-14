@@ -122,11 +122,13 @@ export const Dashboard = () => {
   return (
     <div>
       <Navbar />
-      <div className="text-xl mt-4">Hi {userData.name}!</div>
+      {!loading && <div className="text-xl mt-4">Hi {userData.name}!</div>}
       <div className="flex flex-col mt-3">
-        <p className="text-xl font-bold text-black">
-          You can manage your todos here
-        </p>
+        {!loading && (
+          <p className="text-xl font-bold text-black">
+            You can manage your todos here
+          </p>
+        )}
         {loading && (
           <div className="flex flex-col gap-3">
             <ClipLoader className="m-auto mt-10 w-50 h-50" />
